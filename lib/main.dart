@@ -5,8 +5,6 @@ class Note {
   final String title;
   final String content;
 
-  // TODO use time of creation as key for deleting etc
-
   const Note(this.title, this.content);
 }
 
@@ -44,7 +42,21 @@ class _ListScreenState extends State<ListScreen> {
     _saveNotes();
   }
 
-  Future<void>  _openNote(context, index) async {
+  void _updateNote(index, content) {
+    setState(() {
+      _notes[index] = Note('', content);
+    });
+    _saveNotes();
+  }
+
+  void _deleteNote(index) {
+    setState(() {
+      _notes.removeAt(index);
+    });
+    _saveNotes();
+  }
+
+  Future<void> _openNote(context, index) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -55,12 +67,10 @@ class _ListScreenState extends State<ListScreen> {
       ),
     );
     if (!context.mounted) return;
-    if (result == '') {
-      // TODO delete
+    if (result == '' || (result == null && _notes[index].content == '')) {
+      _deleteNote(index);
     } else if (result != null) {
-      // TODO edit
-    } else {
-      // do nothing
+      _updateNote(index, result);
     }
   }
 
@@ -89,12 +99,11 @@ class _ListScreenState extends State<ListScreen> {
       body: ListView.builder(
         itemCount: _notes.length,
         itemBuilder: (context, index) {
-          debugPrint('build $index');
           var content = _notes[index].content;
           content = (content.length > 20) ? '${content.substring(0, 20)}...' : content;
           return Container(
             padding: const EdgeInsets.all(2.0),
-            margin: const EdgeInsets.all(3.0),
+            margin: const EdgeInsets.all(2.0),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(color: Colors.grey.shade700),
@@ -111,7 +120,7 @@ class _ListScreenState extends State<ListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _addNote(Note('', 'Content for Note ${_notes.length}'));
+          _addNote(const Note('', ''));
           _openNote(context, 0);
         },
         shape: const CircleBorder(),
@@ -176,6 +185,7 @@ class _ContentScreenState extends State<ContentScreen> {
         child: TextField(
           // autofocus: true,
           expands: true,
+          decoration: const InputDecoration( border: InputBorder.none ),
           minLines: null,
           maxLines: null,
           controller: _controller
