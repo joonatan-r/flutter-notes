@@ -5,6 +5,8 @@ class Note {
   final String title;
   final String content;
 
+  // TODO use time of creation as key for deleting etc
+
   const Note(this.title, this.content);
 }
 
@@ -42,8 +44,8 @@ class _ListScreenState extends State<ListScreen> {
     _saveNotes();
   }
 
-  void _openNote(context, index) {
-    Navigator.push(
+  Future<void>  _openNote(context, index) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const ContentScreen(),
@@ -52,6 +54,14 @@ class _ListScreenState extends State<ListScreen> {
         ),
       ),
     );
+    if (!context.mounted) return;
+    if (result == '') {
+      // TODO delete
+    } else if (result != null) {
+      // TODO edit
+    } else {
+      // do nothing
+    }
   }
 
   Future<void> _loadNotes() async {
@@ -112,21 +122,64 @@ class _ListScreenState extends State<ListScreen> {
   }
 }
 
-class ContentScreen extends StatelessWidget {
+class ContentScreen extends StatefulWidget {
   const ContentScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final note = ModalRoute.of(context)!.settings.arguments as Note;
+  State<ContentScreen> createState() => _ContentScreenState();
+}
 
+class _ContentScreenState extends State<ContentScreen> {
+
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final note = ModalRoute.of(context)!.settings.arguments as Note;
+    _controller.value = _controller.value.copyWith(
+      text: note.content,
+      // selection: TextSelection.collapsed(offset: 0),
+    );
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
-        // title: Text(''),
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: (){
+              Navigator.pop(context, _controller.value.text);
+            },
+            icon: const Icon(Icons.check, color: Colors.white),
+          ),
+          IconButton(
+            onPressed: (){
+              Navigator.pop(context, '');
+            },
+            icon: const Icon(Icons.delete, color: Colors.white),
+          ),
+        ],
       ),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Text(note.content),
+        child: TextField(
+          // autofocus: true,
+          expands: true,
+          minLines: null,
+          maxLines: null,
+          controller: _controller
+        ),
       ),
     );
   }
