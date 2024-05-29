@@ -93,7 +93,6 @@ class _ListScreenState extends State<ListScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
-        // title: const Text(''),
       ),
       backgroundColor: Colors.grey.shade100,
       body: ListView.builder(
@@ -101,20 +100,32 @@ class _ListScreenState extends State<ListScreen> {
         itemBuilder: (context, index) {
           var content = _notes[index].content;
           content = (content.length > 20) ? '${content.substring(0, 20)}...' : content;
-          return Container(
-            padding: const EdgeInsets.all(2.0),
-            margin: const EdgeInsets.all(2.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey.shade700),
-              borderRadius: const BorderRadius.all(Radius.circular(7.0)),
-            ),
-            child: ListTile(
-              title: Text(content),
-              onTap: () {
-                _openNote(context, index);
-              },
-            ),
+          return DragTarget<int>(
+            builder: (context, candidateData, rejectedData) {
+              return Container(
+                padding: const EdgeInsets.all(2.0),
+                margin: const EdgeInsets.all(2.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade700),
+                  borderRadius: const BorderRadius.all(Radius.circular(7.0)),
+                ),
+                child: LongPressDraggable<int>(
+                  data: index,
+                  feedback: const DragItem(),
+                  dragAnchorStrategy: pointerDragAnchorStrategy,
+                  child: ListTile(
+                    title: Text(content),
+                    onTap: () {
+                      _openNote(context, index);
+                    },
+                  ),
+                ),
+              );
+            },
+            onAcceptWithDetails: (details) {
+              debugPrint('${details.data} on $index');
+            },
           );
         },
       ),
@@ -192,5 +203,14 @@ class _ContentScreenState extends State<ContentScreen> {
         ),
       ),
     );
+  }
+}
+
+class DragItem extends StatelessWidget {
+  const DragItem({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 100.0, height: 50.0, color: Colors.grey);
   }
 }
