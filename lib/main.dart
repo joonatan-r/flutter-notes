@@ -28,6 +28,8 @@ class ListScreen extends StatefulWidget {
 
 class _ListScreenState extends State<ListScreen> {
   List<Note> _notes = List.empty();
+  int? hoverIdx;
+  bool? hoveringGreaterIdx;
 
   @override
   void initState() {
@@ -54,6 +56,20 @@ class _ListScreenState extends State<ListScreen> {
       _notes.removeAt(index);
     });
     _saveNotes();
+  }
+
+  void _reorderNotes(fromIndex, toIndex) {
+    setState(() {
+      if (fromIndex != toIndex) {
+        var noteToMove = _notes.removeAt(fromIndex);
+        _notes.insert(toIndex, noteToMove);
+      }
+      hoveringGreaterIdx = null;
+      hoverIdx = null;
+    });
+    if (fromIndex != toIndex) {
+      _saveNotes();
+    }
   }
 
   Future<void> _openNote(context, index) async {
@@ -96,6 +112,7 @@ class _ListScreenState extends State<ListScreen> {
       ),
       backgroundColor: Colors.grey.shade100,
       body: ListView.builder(
+        key: UniqueKey(),
         itemCount: _notes.length,
         itemBuilder: (context, index) {
           var content = _notes[index].content;
@@ -107,7 +124,11 @@ class _ListScreenState extends State<ListScreen> {
                 margin: const EdgeInsets.all(2.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border.all(color: Colors.grey.shade700),
+                  border: (index == hoverIdx)
+                    ? (hoveringGreaterIdx == true)
+                      ? const Border(bottom: BorderSide(color: Colors.blue))
+                      : const Border(top: BorderSide(color: Colors.blue))
+                    : Border.all(color: Colors.grey.shade700),
                   borderRadius: const BorderRadius.all(Radius.circular(7.0)),
                 ),
                 child: LongPressDraggable<int>(
@@ -123,8 +144,17 @@ class _ListScreenState extends State<ListScreen> {
                 ),
               );
             },
+            onWillAcceptWithDetails: (details) {
+              if (hoverIdx != index) {
+                setState(() {
+                  hoverIdx = index;
+                  hoveringGreaterIdx = (index == details.data) ? null : index > details.data;
+                });
+              }
+              return true;
+            },
             onAcceptWithDetails: (details) {
-              debugPrint('${details.data} on $index');
+              _reorderNotes(details.data, index);
             },
           );
         },
