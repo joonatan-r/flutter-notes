@@ -29,7 +29,7 @@ class ListScreen extends StatefulWidget {
 class _ListScreenState extends State<ListScreen> {
   List<Note> _notes = List.empty();
   int? hoverIdx;
-  bool? hoveringGreaterIdx;
+  int? dragIdx;
 
   @override
   void initState() {
@@ -64,7 +64,7 @@ class _ListScreenState extends State<ListScreen> {
         var noteToMove = _notes.removeAt(fromIndex);
         _notes.insert(toIndex, noteToMove);
       }
-      hoveringGreaterIdx = null;
+      dragIdx = null;
       hoverIdx = null;
     });
     if (fromIndex != toIndex) {
@@ -124,23 +124,30 @@ class _ListScreenState extends State<ListScreen> {
                 margin: const EdgeInsets.all(2.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: (index == hoverIdx)
-                    ? (hoveringGreaterIdx == true)
-                      ? const Border(bottom: BorderSide(color: Colors.blue))
-                      : const Border(top: BorderSide(color: Colors.blue))
-                    : Border.all(color: Colors.grey.shade700),
+                  border: (index == hoverIdx && dragIdx != hoverIdx)
+                    ? (dragIdx! < hoverIdx!)
+                      ? const Border(bottom: BorderSide(color: Colors.black, width: 10))
+                      : const Border(top: BorderSide(color: Colors.black, width: 10))
+                    : (index == dragIdx)
+                      ? null
+                      : Border.all(color: Colors.grey.shade700),
                   borderRadius: const BorderRadius.all(Radius.circular(7.0)),
                 ),
                 child: LongPressDraggable<int>(
                   data: index,
                   feedback: const DragItem(),
-                  dragAnchorStrategy: pointerDragAnchorStrategy,
+                  dragAnchorStrategy: childDragAnchorStrategy,
                   child: ListTile(
-                    title: Text(content),
+                    title: Text((index == dragIdx) ? '' : content),
                     onTap: () {
                       _openNote(context, index);
                     },
                   ),
+                  onDragStarted: () {
+                    setState(() {
+                      dragIdx = index;
+                    });
+                  },
                 ),
               );
             },
@@ -148,7 +155,6 @@ class _ListScreenState extends State<ListScreen> {
               if (hoverIdx != index) {
                 setState(() {
                   hoverIdx = index;
-                  hoveringGreaterIdx = (index == details.data) ? null : index > details.data;
                 });
               }
               return true;
@@ -241,6 +247,10 @@ class DragItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 100.0, height: 50.0, color: Colors.grey);
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: 50.0,
+      color: Colors.grey.withOpacity(0.4),
+    );
   }
 }
