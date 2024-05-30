@@ -115,20 +115,6 @@ class _ListScreenState extends State<ListScreen> {
         key: UniqueKey(),
         itemCount: _notes.length,
         itemBuilder: (context, index) {
-          var content = _notes[index].content;
-          var newLines = 0;
-          var i = 0;
-          for (; i < content.length; i++) {
-            if (content[i] == '\n') {
-              newLines++;
-              if (newLines > 1) break;
-            }
-          }
-          if (newLines > 1) {
-            content = '${content.substring(0, i)}...';
-          } else if (content.length > 60) {
-            content = '${content.substring(0, 60)}...';
-          }
           return DragTarget<int>(
             builder: (context, candidateData, rejectedData) {
               Widget? topElement, middleElement, bottomElement;
@@ -152,7 +138,7 @@ class _ListScreenState extends State<ListScreen> {
                   feedback: const DragItem(),
                   dragAnchorStrategy: childDragAnchorStrategy,
                   child: ListTile(
-                    title: Text((index == _dragIdx) ? '' : content),
+                    title: Text((index == _dragIdx) ? '' : _notes[index].content, maxLines: 2),
                     onTap: () {
                       _openNote(context, index);
                     },
