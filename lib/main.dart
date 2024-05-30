@@ -116,7 +116,19 @@ class _ListScreenState extends State<ListScreen> {
         itemCount: _notes.length,
         itemBuilder: (context, index) {
           var content = _notes[index].content;
-          content = (content.length > 20) ? '${content.substring(0, 20)}...' : content;
+          var newLines = 0;
+          var i = 0;
+          for (; i < content.length; i++) {
+            if (content[i] == '\n') {
+              newLines++;
+              if (newLines > 1) break;
+            }
+          }
+          if (newLines > 1) {
+            content = '${content.substring(0, i)}...';
+          } else if (content.length > 60) {
+            content = '${content.substring(0, 60)}...';
+          }
           return DragTarget<int>(
             builder: (context, candidateData, rejectedData) {
               Widget? topElement, middleElement, bottomElement;
@@ -127,38 +139,34 @@ class _ListScreenState extends State<ListScreen> {
                   topElement = Container(height: 10, color: Colors.black);
                 }
               }
-              if (index == _dragIdx) {
-                middleElement = const SizedBox(height: 50);
-              } else {
-                middleElement = Container(
-                  padding: const EdgeInsets.all(2.0),
-                  margin: const EdgeInsets.all(2.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade700),
-                    borderRadius: const BorderRadius.all(Radius.circular(7.0)),
-                  ),
-                  child: LongPressDraggable<int>(
-                    data: index,
-                    feedback: const DragItem(),
-                    dragAnchorStrategy: childDragAnchorStrategy,
-                    child: ListTile(
-                      title: Text((index == _dragIdx) ? '' : content),
-                      onTap: () {
-                        _openNote(context, index);
-                      },
-                    ),
-                    onDragStarted: () {
-                      setState(() {
-                        _dragIdx = index;
-                      });
-                    },
-                    onDraggableCanceled: (velocity, offset) { // dragged past list end
-                      _reorderNotes(index, _notes.length - 1);
+              middleElement = Container(
+                padding: const EdgeInsets.all(2.0),
+                margin: const EdgeInsets.all(2.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: (index == _dragIdx) ? null : Border.all(color: Colors.grey.shade700),
+                  borderRadius: (index == _dragIdx) ? BorderRadius.zero : const BorderRadius.all(Radius.circular(7.0)),
+                ),
+                child: LongPressDraggable<int>(
+                  data: index,
+                  feedback: const DragItem(),
+                  dragAnchorStrategy: childDragAnchorStrategy,
+                  child: ListTile(
+                    title: Text((index == _dragIdx) ? '' : content),
+                    onTap: () {
+                      _openNote(context, index);
                     },
                   ),
-                );
-              }
+                  onDragStarted: () {
+                    setState(() {
+                      _dragIdx = index;
+                    });
+                  },
+                  onDraggableCanceled: (velocity, offset) { // dragged past list end
+                    _reorderNotes(index, _notes.length - 1);
+                  },
+                ),
+              );
               return Column(
                 children: [
                   topElement,
