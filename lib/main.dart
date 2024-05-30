@@ -28,8 +28,8 @@ class ListScreen extends StatefulWidget {
 
 class _ListScreenState extends State<ListScreen> {
   List<Note> _notes = List.empty();
-  int? hoverIdx;
-  int? dragIdx;
+  int? _hoverIdx;
+  int? _dragIdx;
 
   @override
   void initState() {
@@ -64,8 +64,8 @@ class _ListScreenState extends State<ListScreen> {
         var noteToMove = _notes.removeAt(fromIndex);
         _notes.insert(toIndex, noteToMove);
       }
-      dragIdx = null;
-      hoverIdx = null;
+      _dragIdx = null;
+      _hoverIdx = null;
     });
     if (fromIndex != toIndex) {
       _saveNotes();
@@ -119,42 +119,58 @@ class _ListScreenState extends State<ListScreen> {
           content = (content.length > 20) ? '${content.substring(0, 20)}...' : content;
           return DragTarget<int>(
             builder: (context, candidateData, rejectedData) {
-              return Container(
-                padding: const EdgeInsets.all(2.0),
-                margin: const EdgeInsets.all(2.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: (index == hoverIdx && dragIdx != hoverIdx)
-                    ? (dragIdx! < hoverIdx!)
-                      ? const Border(bottom: BorderSide(color: Colors.black, width: 10))
-                      : const Border(top: BorderSide(color: Colors.black, width: 10))
-                    : (index == dragIdx)
-                      ? null
-                      : Border.all(color: Colors.grey.shade700),
-                  borderRadius: const BorderRadius.all(Radius.circular(7.0)),
-                ),
-                child: LongPressDraggable<int>(
-                  data: index,
-                  feedback: const DragItem(),
-                  dragAnchorStrategy: childDragAnchorStrategy,
-                  child: ListTile(
-                    title: Text((index == dragIdx) ? '' : content),
-                    onTap: () {
-                      _openNote(context, index);
+              Widget? topElement, middleElement, bottomElement;
+              if (index == _hoverIdx && _dragIdx != _hoverIdx) {
+                if (_dragIdx! < _hoverIdx!) {
+                  bottomElement = Container(height: 10, color: Colors.black);
+                } else {
+                  topElement = Container(height: 10, color: Colors.black);
+                }
+              }
+              if (index == _dragIdx) {
+                middleElement = const SizedBox(height: 50);
+              } else {
+                middleElement = Container(
+                  padding: const EdgeInsets.all(2.0),
+                  margin: const EdgeInsets.all(2.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey.shade700),
+                    borderRadius: const BorderRadius.all(Radius.circular(7.0)),
+                  ),
+                  child: LongPressDraggable<int>(
+                    data: index,
+                    feedback: const DragItem(),
+                    dragAnchorStrategy: childDragAnchorStrategy,
+                    child: ListTile(
+                      title: Text((index == _dragIdx) ? '' : content),
+                      onTap: () {
+                        _openNote(context, index);
+                      },
+                    ),
+                    onDragStarted: () {
+                      setState(() {
+                        _dragIdx = index;
+                      });
                     },
                   ),
-                  onDragStarted: () {
-                    setState(() {
-                      dragIdx = index;
-                    });
-                  },
-                ),
+                );
+              }
+              return Column(
+                children: [
+                  topElement,
+                  middleElement,
+                  bottomElement,
+                ]
+                  .where((w) => w != null)
+                  .map((w) => w as Widget)
+                  .toList(),
               );
             },
             onWillAcceptWithDetails: (details) {
-              if (hoverIdx != index) {
+              if (_hoverIdx != index) {
                 setState(() {
-                  hoverIdx = index;
+                  _hoverIdx = index;
                 });
               }
               return true;
