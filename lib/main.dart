@@ -153,6 +153,9 @@ class _ListScreenState extends State<ListScreen> {
                         _dragIdx = index;
                       });
                     },
+                    onDraggableCanceled: (velocity, offset) { // dragged past list end
+                      _reorderNotes(index, _notes.length - 1);
+                    },
                   ),
                 );
               }
