@@ -112,7 +112,7 @@ class _ListScreenState extends State<ListScreen> {
       ),
       backgroundColor: Colors.grey.shade100,
       body: ListView.builder(
-        key: UniqueKey(),
+        key: const PageStorageKey<String>('controllerA'),
         itemCount: _notes.length,
         itemBuilder: (context, index) {
           return DragTarget<int>(
@@ -201,6 +201,7 @@ class ContentScreen extends StatefulWidget {
 class _ContentScreenState extends State<ContentScreen> {
 
   final TextEditingController _controller = TextEditingController();
+  final FocusNode focusNode = FocusNode();
 
   @override
   void didChangeDependencies() {
@@ -210,6 +211,9 @@ class _ContentScreenState extends State<ContentScreen> {
       text: note.content,
       // selection: TextSelection.collapsed(offset: 0),
     );
+    if (note.content == '') {
+      focusNode.requestFocus();
+    }
   }
   
   @override
@@ -244,6 +248,7 @@ class _ContentScreenState extends State<ContentScreen> {
         padding: const EdgeInsets.all(16),
         child: TextField(
           // autofocus: true,
+          focusNode: focusNode,
           expands: true,
           decoration: const InputDecoration( border: InputBorder.none ),
           minLines: null,
