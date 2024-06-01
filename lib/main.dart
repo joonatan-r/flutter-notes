@@ -235,11 +235,14 @@ class _ContentScreenState extends State<ContentScreen> {
             },
             icon: const Icon(Icons.check, color: Colors.white),
           ),
-          IconButton(
-            onPressed: (){
-              Navigator.pop(context, '');
+          GestureDetector(
+            onLongPress: () {
+                Navigator.pop(context, '');
             },
-            icon: const Icon(Icons.delete, color: Colors.white),
+            child: IconButton(
+              onPressed: (){},
+              icon: const Icon(Icons.delete, color: Colors.white),
+            ),
           ),
         ],
       ),
